@@ -1,0 +1,12 @@
+# Railway deployment config for HCW@Home
+# Builds from the backend/ directory (where the Dockerfile lives)
+
+[build]
+  dockerfile = "backend/Dockerfile"
+  rootDirectory = "backend"
+
+[deploy]
+  # Dockerfile CMD runs daphne on $PORT (default 8000)
+  healthcheckPath = "/"
+  healthcheckTimeout = 120
+  restartPolicyType = "ON_FAILURE"
