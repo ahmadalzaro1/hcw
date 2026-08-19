@@ -29,6 +29,7 @@ RUN groupadd --gid 1000 hcw \
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /app/ /app/
+RUN chown -R hcw:hcw /app/statics 2>/dev/null || true
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1
