@@ -1,5 +1,8 @@
 # Dockerfile.railway — Railway deployment (API stage only, no nginx admin stage)
 # Build context is repo root, so COPY from backend/
+#
+# If MIGRATE_ONLY=1 is set, runs migrations and exits (for the migrate service).
+# Otherwise starts daphne (for the web service).
 
 FROM python:3.13 as builder
 
@@ -32,4 +35,4 @@ ENV HOME=/home/hcw
 USER hcw
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput; daphne -b 0.0.0.0 -p 8000 core.asgi:application"]
+CMD ["sh", "-c", "if [ \"$MIGRATE_ONLY\" = \"1' ]; then python manage.py migrate --noinput && python manage.py collectstatic --noinput; else python manage.py migrate --noinput && python manage.py collectstatic --noinput; daphne -b 0.0.0.0 -p 8000 core.asgi:application; fi"]
