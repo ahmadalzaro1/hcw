@@ -2,7 +2,8 @@
 # Build context is repo root, so COPY from backend/
 #
 # If MIGRATE_ONLY=1 is set, runs migrations and exits (for the migrate service).
-# Otherwise starts daphne (for the web service).
+# Otherwise: runs migrations in the background, then starts daphne immediately
+# so the healthcheck passes while migrations complete.
 
 FROM python:3.13 as builder
 
@@ -20,6 +21,8 @@ FROM python:3.13 as api
 
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 
+# Dedicated unprivileged account, mirroring the "hcw" system user created by the
+# Debian packaging. Fixed uid/gid so mounted volumes keep a predictable owner.
 RUN groupadd --gid 1000 hcw \
     && useradd --uid 1000 --gid 1000 --create-home --shell /usr/sbin/nologin hcw
 
@@ -35,4 +38,6 @@ ENV HOME=/home/hcw
 USER hcw
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput; if [ \"$MIGRATE_ONLY\" = \"1\" ]; then exit 0; fi; daphne -b 0.0.0.0 -p 8000 core.asgi:application"]
+# MIGRATE_ONLY=1 → run migrations and exit (one-shot job)
+# Otherwise → background migrations + start daphne immediately
+CMD ["sh", "-c", "if [ \"$MIGRATE_ONLY\" = \"1\" ]; then python manage.py migrate --noinput && python manage.py collectstatic --noinput; exit 0; fi; python manage.py migrate --noinput && python manage.py collectstatic --noinput & daphne -b 0.0.0.0 -p 8000 core.asgi:application"]
