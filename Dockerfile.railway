@@ -35,4 +35,4 @@ ENV HOME=/home/hcw
 USER hcw
 EXPOSE 8000
 
-CMD ["sh", "-c", "if [ \"$MIGRATE_ONLY\" = \"1' ]; then python manage.py migrate --noinput && python manage.py collectstatic --noinput; else python manage.py migrate --noinput && python manage.py collectstatic --noinput; daphne -b 0.0.0.0 -p 8000 core.asgi:application; fi"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput; if [ \"$MIGRATE_ONLY\" = \"1\" ]; then exit 0; fi; daphne -b 0.0.0.0 -p 8000 core.asgi:application"]
